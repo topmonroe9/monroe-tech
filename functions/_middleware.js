@@ -12,24 +12,16 @@ const EN_META = {
 
 class MetaRewriter {
   element(el) {
-    const prop = el.getAttribute('property') || el.getAttribute('name') || '';
-    const rel = el.getAttribute('rel') || '';
+    const prop = el.getAttribute('property') || '';
+    const name = el.getAttribute('name') || '';
 
-    if (prop === 'og:title' || prop === 'twitter:title') {
+    if (prop === 'og:title' || name === 'twitter:title') {
       el.setAttribute('content', EN_META.title);
-    } else if (
-      prop === 'og:description' ||
-      prop === 'twitter:description' ||
-      el.getAttribute('name') === 'description'
-    ) {
+    } else if (prop === 'og:description' || name === 'twitter:description' || name === 'description') {
       el.setAttribute('content', EN_META.description);
     } else if (prop === 'og:url') {
       el.setAttribute('content', EN_META.url);
-    } else if (
-      prop === 'og:image' ||
-      prop === 'twitter:image' ||
-      el.getAttribute('name') === 'twitter:image'
-    ) {
+    } else if (prop === 'og:image' || name === 'twitter:image') {
       el.setAttribute('content', EN_META.image);
     }
   }
@@ -52,24 +44,17 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const country = request.cf?.country || '';
 
-  const ua = request.headers.get('user-agent') || '';
-  const isBot = /bot|crawl|spider|google|yandex|bing|facebook|twitter|telegram|slack|discord|whatsapp|linkedin/i.test(ua);
-
-  // Bots on .dev → rewrite OG tags to English
-  if (isBot) {
-    const response = await context.next();
-    return new HTMLRewriter()
-      .on('html', new HtmlLangRewriter())
-      .on('title', new TitleRewriter())
-      .on('meta', new MetaRewriter())
-      .transform(response);
-  }
-
-  // Russian/CIS users on .dev → redirect to .ru
+  // Russian/CIS users on .dev → redirect to .ru (GitHub Pages)
   if (RU_COUNTRIES.has(country)) {
     url.hostname = 'monroe-tech.ru';
     return Response.redirect(url.toString(), 302);
   }
 
-  return context.next();
+  // All other requests: rewrite OG tags to English
+  const response = await context.next();
+  return new HTMLRewriter()
+    .on('html', new HtmlLangRewriter())
+    .on('title', new TitleRewriter())
+    .on('meta', new MetaRewriter())
+    .transform(response);
 }

@@ -273,6 +273,9 @@ const SolutionIcon = ({ id, color }) => {
 
 export default function Portfolio() {
   const [lang, setLang] = useState(() => {
+    const host = window.location.hostname;
+    if (host === "monroe-tech.dev") return "en";
+    if (host === "monroe-tech.ru") return "ru";
     const bl = navigator.language || navigator.userLanguage || "";
     return bl.startsWith("ru") ? "ru" : "en";
   });
