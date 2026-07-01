@@ -26,4 +26,11 @@ export default defineConfig([
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
+  {
+    // Cloudflare Pages Functions run in the Workers runtime, not the browser.
+    files: ['functions/**/*.js'],
+    languageOptions: {
+      globals: { ...globals.worker, HTMLRewriter: 'readonly' },
+    },
+  },
 ])
